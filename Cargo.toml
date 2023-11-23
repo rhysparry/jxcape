@@ -1,7 +1,13 @@
 [package]
 name = "jxcape"
+description = "A command line tool for creating JSON values"
+repository = "https://github.com/rhysparry/jxcape"
 version = "0.1.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+keywords = ["json", "cli"]
+categories = ["command-line-utilities"]
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
