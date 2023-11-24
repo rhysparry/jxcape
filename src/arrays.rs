@@ -57,8 +57,8 @@ impl JsonValueCommand for ArrayArgs {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
     use crate::testing::TestBuffer;
+    use serde_json::json;
 
     fn array_args(values: Vec<&str>) -> ArrayArgs {
         ArrayArgs {
@@ -94,10 +94,7 @@ mod tests {
         let result = args.value(&mut buffer).unwrap();
         assert_eq!(
             result,
-            vec![
-                "Hello, world!".to_string(),
-                "This is a test".to_string(),
-            ]
+            vec!["Hello, world!".to_string(), "This is a test".to_string(),]
         );
     }
 
@@ -105,13 +102,7 @@ mod tests {
     fn test_array_args_to_array_value() {
         let args = array_args(vec!["Hello, world!", "This is a test"]);
         let result = args.get_json_value();
-        assert_eq!(
-            result,
-            json!([
-                "Hello, world!",
-                "This is a test",
-            ])
-        );
+        assert_eq!(result, json!(["Hello, world!", "This is a test",]));
     }
 
     #[test]
