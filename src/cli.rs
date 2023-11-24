@@ -2,6 +2,7 @@ use clap::{Parser, Subcommand};
 
 use crate::arrays::ArrayArgs;
 use crate::json::{JsonDefaultPrinter, JsonFormatter, JsonPrettyPrinter, JsonValueCommand};
+use crate::objects::ObjectArgs;
 use crate::strings::StringArgs;
 
 pub fn run() {
@@ -14,7 +15,7 @@ pub fn run() {
     printer.print(json_value);
 }
 
-/// Simple program to greet a person
+/// A command line tool for generating JSON values
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
@@ -29,6 +30,7 @@ impl Cli {
     fn value_command(&self) -> Box<dyn JsonValueCommand> {
         match &self.command {
             Commands::Array(args) => Box::new(args.clone()),
+            Commands::Object(args) => Box::new(args.clone()),
             Commands::String(args) => Box::new(args.clone()),
         }
     }
@@ -46,6 +48,8 @@ impl Cli {
 enum Commands {
     /// Returns the arguments as a JSON array
     Array(ArrayArgs),
+    /// Returns the arguments as a JSON object
+    Object(ObjectArgs),
     /// Returns the argument as a JSON string
     String(StringArgs),
 }
