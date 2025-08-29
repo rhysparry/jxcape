@@ -7,14 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Miscellaneous Tasks
 
-- Add a changelog
-
-### Changed
-
-- Update dependabot
-- Update checkout action v3 -> v4
+- Add comprehensive GitHub Copilot instructions for jxcape development (#73)
 
 [unreleased]: https://github.com/rhysparry/jxcape/compare/v0.2.0..HEAD
 
