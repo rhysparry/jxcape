@@ -45,31 +45,9 @@ jobs:
           target: ${{ matrix.target }}
 
       - name: Install git-cliff
-        shell: bash
-        run: |
-          set -e
-          VERSION="0.24.2"
-          
-          case "${{ runner.os }}" in
-            "Linux")
-              URL="https://github.com/orhun/git-cliff/releases/download/v${VERSION}/git-cliff-${VERSION}-x86_64-unknown-linux-gnu.tar.gz"
-              curl -L $URL | tar -xz
-              sudo mv git-cliff-${VERSION}/git-cliff /usr/local/bin/
-              ;;
-            "macOS")
-              URL="https://github.com/orhun/git-cliff/releases/download/v${VERSION}/git-cliff-${VERSION}-x86_64-apple-darwin.tar.gz"
-              curl -L $URL | tar -xz
-              sudo mv git-cliff-${VERSION}/git-cliff /usr/local/bin/
-              ;;
-            "Windows")
-              URL="https://github.com/orhun/git-cliff/releases/download/v${VERSION}/git-cliff-${VERSION}-x86_64-pc-windows-msvc.zip"
-              curl -L $URL -o git-cliff.zip
-              unzip git-cliff.zip
-              mv git-cliff-${VERSION}/git-cliff.exe /c/Windows/System32/
-              ;;
-          esac
-          
-          git-cliff --version
+        uses: taiki-e/install-action@v2
+        with:
+          tool: git-cliff@2.10.0
 
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
@@ -114,12 +92,9 @@ jobs:
           fetch-depth: 0
 
       - name: Install git-cliff
-        run: |
-          VERSION="0.24.2"
-          URL="https://github.com/orhun/git-cliff/releases/download/v${VERSION}/git-cliff-${VERSION}-x86_64-unknown-linux-gnu.tar.gz"
-          curl -L $URL | tar -xz
-          sudo mv git-cliff-${VERSION}/git-cliff /usr/local/bin/
-          git-cliff --version
+        uses: taiki-e/install-action@v2
+        with:
+          tool: git-cliff@2.10.0
 
       - name: Generate changelog for this version
         run: |
