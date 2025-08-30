@@ -112,8 +112,7 @@ jobs:
 
       - name: Move assets to root
         run: |
-          find assets -name "*.tar.gz" -o -name "*.zip" | \
-            xargs -I {} mv {} .
+          find assets -type f \( -name "*.tar.gz" -o -name "*.zip" \) -exec mv {} . \;
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
