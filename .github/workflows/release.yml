@@ -1,0 +1,171 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-release:
+    name: Build and Release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            binary_name: jxcape
+            asset_name: jxcape-linux-x86_64.tar.gz
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            binary_name: jxcape
+            asset_name: jxcape-macos-x86_64.tar.gz
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            binary_name: jxcape
+            asset_name: jxcape-macos-aarch64.tar.gz
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary_name: jxcape.exe
+            asset_name: jxcape-windows-x86_64.zip
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # Fetch full history for changelog generation
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+
+      - name: Install git-cliff
+        shell: bash
+        run: |
+          set -e
+          VERSION="0.24.2"
+          
+          case "${{ runner.os }}" in
+            "Linux")
+              URL="https://github.com/orhun/git-cliff/releases/download/v${VERSION}/git-cliff-${VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+              curl -L $URL | tar -xz
+              sudo mv git-cliff-${VERSION}/git-cliff /usr/local/bin/
+              ;;
+            "macOS")
+              URL="https://github.com/orhun/git-cliff/releases/download/v${VERSION}/git-cliff-${VERSION}-x86_64-apple-darwin.tar.gz"
+              curl -L $URL | tar -xz
+              sudo mv git-cliff-${VERSION}/git-cliff /usr/local/bin/
+              ;;
+            "Windows")
+              URL="https://github.com/orhun/git-cliff/releases/download/v${VERSION}/git-cliff-${VERSION}-x86_64-pc-windows-msvc.zip"
+              curl -L $URL -o git-cliff.zip
+              unzip git-cliff.zip
+              mv git-cliff-${VERSION}/git-cliff.exe /c/Windows/System32/
+              ;;
+          esac
+          
+          git-cliff --version
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Run tests
+        run: cargo test --target ${{ matrix.target }}
+
+      - name: Create asset (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p release
+          cp target/${{ matrix.target }}/release/${{ matrix.binary_name }} release/
+          cp LICENSE README.md CHANGELOG.md release/
+          cd release
+          tar -czf ../${{ matrix.asset_name }} *
+
+      - name: Create asset (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          mkdir release
+          copy target\${{ matrix.target }}\release\${{ matrix.binary_name }} release\
+          copy LICENSE release\
+          copy README.md release\
+          copy CHANGELOG.md release\
+          cd release
+          7z a ..\${{ matrix.asset_name }} *
+
+      - name: Upload asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: ${{ matrix.asset_name }}
+
+  create-release:
+    name: Create Release
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install git-cliff
+        run: |
+          VERSION="0.24.2"
+          URL="https://github.com/orhun/git-cliff/releases/download/v${VERSION}/git-cliff-${VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+          curl -L $URL | tar -xz
+          sudo mv git-cliff-${VERSION}/git-cliff /usr/local/bin/
+          git-cliff --version
+
+      - name: Generate changelog for this version
+        run: |
+          # Extract version from tag
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+          # Generate changelog for just this version
+          git-cliff --latest --strip header > RELEASE_CHANGELOG.md
+
+      - name: Download all assets
+        uses: actions/download-artifact@v4
+        with:
+          path: assets
+
+      - name: Move assets to root
+        run: |
+          find assets -name "*.tar.gz" -o -name "*.zip" | \
+            xargs -I {} mv {} .
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: Release ${{ env.VERSION }}
+          body_path: RELEASE_CHANGELOG.md
+          files: |
+            *.tar.gz
+            *.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-to-crates-io:
+    name: Publish to Crates.io
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Publish to crates.io
+        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}

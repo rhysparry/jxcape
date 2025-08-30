@@ -121,6 +121,24 @@ $ jxcape --pretty array 1 2 3
 
 ## Installation
 
+### Pre-built Binaries
+
+Download the latest release for your platform from the [releases page](https://github.com/rhysparry/jxcape/releases).
+
+Available platforms:
+- Linux (x86_64): `jxcape-linux-x86_64.tar.gz`
+- macOS (x86_64): `jxcape-macos-x86_64.tar.gz`
+- macOS (ARM64): `jxcape-macos-aarch64.tar.gz`
+- Windows (x86_64): `jxcape-windows-x86_64.zip`
+
+Extract the archive and add the binary to your PATH.
+
+### From Crates.io
+
+```bash
+$ cargo install jxcape
+```
+
 ### From Source
 
 ```bash
@@ -128,3 +146,24 @@ $ git clone https://github.com/rhysparry/jxcape.git
 $ cd jxcape
 $ cargo install --path .
 ```
+
+## Releasing
+
+This project uses an automated release process. To create a new release:
+
+1. **Update the version** in `Cargo.toml`
+2. **Update the changelog** by running `just changelog` (requires [git-cliff](https://git-cliff.org/))
+3. **Commit the changes**: `git commit -am "chore: bump version to X.Y.Z"`
+4. **Create and push a tag**: `git tag vX.Y.Z && git push origin vX.Y.Z`
+
+The release workflow will automatically:
+- Build binaries for multiple platforms
+- Create a GitHub release with changelog content
+- Upload compressed binary assets
+- Publish the crate to [crates.io](https://crates.io/)
+
+### Prerequisites for Releases
+
+- The `CRATES_IO_TOKEN` secret must be configured in the repository settings
+- The version in `Cargo.toml` should match the tag (without the 'v' prefix)
+- All quality checks (tests, clippy) must pass
