@@ -10,11 +10,13 @@ check:
     cargo clippy -- -D warnings
     cargo test
 
+sed-i := if os() == "macos" { "sed -i ''" } else { "sed -i" }
+
 # Prepare a new release (update changelog and check everything)
 prepare-release version:
     @echo "Preparing release {{version}}..."
     @echo "Updating Cargo.toml version..."
-    sed -i 's/^version = ".*"/version = "{{version}}"/' Cargo.toml
+    {{ sed-i }} 's/^version = ".*"/version = "{{version}}"/' Cargo.toml
     @echo "Updating changelog..."
     git cliff --tag v{{version}} --output CHANGELOG.md
     @echo "Running quality checks..."
