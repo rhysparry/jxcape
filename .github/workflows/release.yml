@@ -106,7 +106,7 @@ jobs:
           git-cliff --latest --strip header > RELEASE_CHANGELOG.md
 
       - name: Download all assets
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: assets
 
