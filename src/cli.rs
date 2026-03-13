@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 
 use crate::arrays::ArrayArgs;
+use crate::env::EnvArgs;
 use crate::json::{JsonDefaultPrinter, JsonFormatter, JsonPrettyPrinter, JsonValueCommand};
 use crate::objects::ObjectArgs;
 use crate::strings::StringArgs;
@@ -32,6 +33,7 @@ impl Cli {
             Commands::Array(args) => Box::new(args.clone()),
             Commands::Object(args) => Box::new(args.clone()),
             Commands::String(args) => Box::new(args.clone()),
+            Commands::Env(args) => Box::new(args.clone()),
         }
     }
 
@@ -52,6 +54,8 @@ enum Commands {
     Object(ObjectArgs),
     /// Returns the argument as a JSON string
     String(StringArgs),
+    /// Returns the current environment as a JSON object
+    Env(EnvArgs),
 }
 
 #[cfg(test)]

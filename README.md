@@ -106,6 +106,84 @@ $ jxcape object --empty
 
 This is included mostly for completeness.
 
+## Environment Variables
+
+To capture the current environment as a JSON object, use the `env` subcommand:
+
+```bash
+$ jxcape env
+{"HOME":"/home/user","SHELL":"/bin/bash","TERM":"xterm-256color",...}
+```
+
+Each environment variable becomes a string-valued key in the object.
+
+### Auto-parsing values
+
+By default all values are strings. Use `--auto` to coerce values that look like JSON literals to their native types. The following types are recognised:
+
+- **Numbers** — integers and floats
+- **Booleans** — `true` and `false`
+- **Null** — `null`
+- **JSON objects** — values that are valid JSON object literals
+- **JSON arrays** — values that are valid JSON array literals
+
+Any value that cannot be parsed as a JSON literal is left as a string.
+
+```bash
+$ jxcape env --auto
+{"HOME":"/home/user","SHLVL":1,...}
+# SHLVL is the number 1 rather than the string "1"
+```
+
+When combined with `--from-stdin`, this is useful for `.env` files that embed structured values:
+
+```bash
+$ printf 'PORT=5432\nDEBUG=true\nTAGS=["web","api"]\nDB={"host":"localhost","port":5432}\n' | jxcape env --from-stdin --auto
+{"PORT":5432,"DEBUG":true,"TAGS":["web","api"],"DB":{"host":"localhost","port":5432}}
+```
+
+Note that values containing JSON object or array literals must be quoted in the `.env` file to be read correctly:
+
+```bash
+# .env file
+DB='{"host":"localhost","port":5432}'
+TAGS='["web","api"]'
+```
+
+### Reading from stdin
+
+You can also supply environment variables in `.env` file format via stdin using `--from-stdin`:
+
+```bash
+$ cat config.env | jxcape env --from-stdin
+{"HOST":"localhost","PORT":"5432","DEBUG":"true"}
+```
+
+Quoted values are handled correctly:
+
+```bash
+$ echo 'GREETING="hello world"' | jxcape env --from-stdin
+{"GREETING":"hello world"}
+```
+
+### Expanding PATH
+
+Use `--expand-path` to split the `PATH` variable into a JSON array instead of leaving it as a colon-separated string:
+
+```bash
+$ jxcape env --expand-path
+{"PATH":["/usr/local/bin","/usr/bin","/bin"],...}
+```
+
+The match is case-insensitive, so `PATH`, `path`, and `Path` are all expanded.
+
+On Windows the default separator is `;`. On all other platforms it is `:`. You can override it with `--path-separator`:
+
+```bash
+$ jxcape env --expand-path --path-separator=:
+{"PATH":["/usr/local/bin","/usr/bin","/bin"],...}
+```
+
 ## Pretty Printing
 
 To pretty print a JSON value, use the `--pretty` flag before the subcommand:
