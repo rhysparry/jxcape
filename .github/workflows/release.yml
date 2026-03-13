@@ -11,6 +11,8 @@ env:
 jobs:
   build-and-release:
     name: Build and Release
+    permissions:
+      contents: read
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -83,6 +85,8 @@ jobs:
 
   create-release:
     name: Create Release
+    permissions:
+      contents: write
     needs: build-and-release
     runs-on: ubuntu-latest
     steps:
@@ -130,6 +134,8 @@ jobs:
 
   publish-to-crates-io:
     name: Publish to Crates.io
+    permissions:
+      contents: read
     needs: create-release
     runs-on: ubuntu-latest
     steps:
