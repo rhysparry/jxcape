@@ -2,6 +2,7 @@ use std::io::BufRead;
 
 pub mod arrays;
 pub mod cli;
+pub mod env;
 pub mod json;
 pub mod objects;
 pub mod strings;
