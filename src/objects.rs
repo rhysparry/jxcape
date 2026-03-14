@@ -298,4 +298,109 @@ mod tests {
         assert_eq!(result[1].key, "other");
         assert_eq!(result[1].value, Some("thing".to_string()));
     }
+
+    #[test]
+    fn test_object_args_json_value_key_no_separator_is_null() {
+        let args = object_args(vec!["key"]);
+        let result = args.get_json_value();
+        assert_eq!(result, json!({ "key": null }));
+    }
+
+    #[test]
+    fn test_object_args_json_value_mixed_key_value_and_key_only() {
+        let args = object_args(vec!["key=value", "flag"]);
+        let result = args.get_json_value();
+        assert_eq!(result, json!({ "key": "value", "flag": null }));
+    }
+
+    #[test]
+    fn test_object_args_auto_key_no_separator_is_null() {
+        let args = object_args_auto(vec!["key"]);
+        let result = args.get_json_value();
+        assert_eq!(result, json!({ "key": null }));
+    }
+
+    #[test]
+    fn test_object_args_empty_flag_via_value() {
+        let args = ObjectArgs {
+            auto: false,
+            value: Vec::new(),
+            from_stdin: false,
+            empty: true,
+            separator: "=".to_string(),
+        };
+        let mut buffer = TestBuffer::empty();
+        let result = args.value(&mut buffer).unwrap();
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_object_args_from_stdin_empty_input() {
+        let args = ObjectArgs {
+            auto: false,
+            value: Vec::new(),
+            from_stdin: true,
+            empty: false,
+            separator: "=".to_string(),
+        };
+        let mut buffer = TestBuffer::empty();
+        let result = args.value(&mut buffer).unwrap();
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_object_args_from_stdin_custom_separator() {
+        let args = ObjectArgs {
+            auto: false,
+            value: Vec::new(),
+            from_stdin: true,
+            empty: false,
+            separator: ":".to_string(),
+        };
+        let mut buffer =
+            TestBuffer::multiple_lines(vec!["key:value".to_string(), "other:thing".to_string()]);
+        let result = args.value(&mut buffer).unwrap();
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].key, "key");
+        assert_eq!(result[0].value, Some("value".to_string()));
+        assert_eq!(result[1].key, "other");
+        assert_eq!(result[1].value, Some("thing".to_string()));
+    }
+
+    #[test]
+    fn test_object_args_from_stdin_auto_parsing() {
+        let args = ObjectArgs {
+            auto: true,
+            value: Vec::new(),
+            from_stdin: true,
+            empty: false,
+            separator: "=".to_string(),
+        };
+        let mut buffer = TestBuffer::multiple_lines(vec![
+            "count=42".to_string(),
+            "flag=true".to_string(),
+            "name=hello".to_string(),
+        ]);
+        let result = args.value(&mut buffer).unwrap();
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0].key, "count");
+        assert_eq!(result[0].value, Some("42".to_string()));
+        assert_eq!(result[1].key, "flag");
+        assert_eq!(result[1].value, Some("true".to_string()));
+        assert_eq!(result[2].key, "name");
+        assert_eq!(result[2].value, Some("hello".to_string()));
+    }
+
+    #[test]
+    fn test_object_args_json_value_custom_separator() {
+        let args = ObjectArgs {
+            auto: false,
+            value: vec!["key:value".to_string(), "other:thing".to_string()],
+            from_stdin: false,
+            empty: false,
+            separator: ":".to_string(),
+        };
+        let result = args.get_json_value();
+        assert_eq!(result, json!({ "key": "value", "other": "thing" }));
+    }
 }
