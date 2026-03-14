@@ -8,6 +8,14 @@ pub mod objects;
 pub mod strings;
 pub mod testing;
 
+pub fn non_empty_separator(s: &str) -> Result<String, String> {
+    if s.is_empty() {
+        Err("separator must not be empty".to_string())
+    } else {
+        Ok(s.to_string())
+    }
+}
+
 pub fn read_all(input: &mut dyn BufRead) -> std::io::Result<String> {
     let mut buffer = String::new();
     for l in input.lines() {
@@ -52,5 +60,17 @@ mod tests {
         let mut buffer = TestBuffer::from(input);
         let result = read_all(&mut buffer).unwrap();
         assert_eq!(result, "Hello, world!\nThis is a test");
+    }
+
+    #[test]
+    fn non_empty_separator_accepts_non_empty_string() {
+        assert_eq!(non_empty_separator("="), Ok("=".to_string()));
+        assert_eq!(non_empty_separator("=="), Ok("==".to_string()));
+        assert_eq!(non_empty_separator(":"), Ok(":".to_string()));
+    }
+
+    #[test]
+    fn non_empty_separator_rejects_empty_string() {
+        assert!(non_empty_separator("").is_err());
     }
 }

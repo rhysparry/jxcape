@@ -1,4 +1,5 @@
 use crate::json::JsonValueCommand;
+use crate::non_empty_separator;
 use crate::ValueReader;
 use clap::Args;
 use serde_json::Map;
@@ -20,7 +21,7 @@ pub struct ObjectArgs {
     #[arg(long, group = "input")]
     empty: bool,
     /// Separator between key and value.
-    #[arg(long, short, default_value = "=")]
+    #[arg(long, short, default_value = "=", value_parser = non_empty_separator)]
     separator: String,
 }
 
@@ -97,6 +98,12 @@ mod tests {
     use super::*;
     use crate::testing::TestBuffer;
     use serde_json::json;
+
+    #[derive(clap::Parser, Debug)]
+    struct ObjectArgsParser {
+        #[command(flatten)]
+        args: ObjectArgs,
+    }
 
     fn object_args(values: Vec<&str>) -> ObjectArgs {
         ObjectArgs {
@@ -402,5 +409,12 @@ mod tests {
         };
         let result = args.get_json_value();
         assert_eq!(result, json!({ "key": "value", "other": "thing" }));
+    }
+
+    #[test]
+    fn test_object_args_empty_separator_is_rejected() {
+        use clap::Parser;
+        let result = ObjectArgsParser::try_parse_from(["cmd", "--separator=", "key=value"]);
+        assert!(result.is_err());
     }
 }
