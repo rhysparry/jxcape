@@ -305,9 +305,19 @@ mod tests {
     #[test]
     fn expand_path_splits_on_default_separator() {
         let args = env_args_expand_path();
-        let mut json_value = json!({ "PATH": "/usr/bin:/bin:/usr/local/bin" });
+        let (input, expected) = if cfg!(windows) {
+            (
+                json!({ "PATH": "C:\\Windows;C:\\Windows\\System32;C:\\Windows\\System32\\Wbem" }),
+                json!({ "PATH": ["C:\\Windows", "C:\\Windows\\System32", "C:\\Windows\\System32\\Wbem"] }),
+            )
+        } else {
+            (
+                json!({ "PATH": "/usr/bin:/bin:/usr/local/bin" }),
+                json!({ "PATH": ["/usr/bin", "/bin", "/usr/local/bin"] }),
+            )
+        };
+        let mut json_value = input;
         args.expand_path_variable(&mut json_value);
-        let expected = json!({ "PATH": ["/usr/bin", "/bin", "/usr/local/bin"] });
         assert_eq!(json_value, expected);
     }
 
@@ -330,7 +340,7 @@ mod tests {
 
     #[test]
     fn expand_path_is_case_insensitive() {
-        let args = env_args_expand_path();
+        let args = env_args_expand_path_with_separator(":");
         let mut json_value = json!({ "path": "/usr/bin:/bin" });
         args.expand_path_variable(&mut json_value);
         assert_eq!(json_value, json!({ "path": ["/usr/bin", "/bin"] }));
@@ -338,7 +348,7 @@ mod tests {
 
     #[test]
     fn expand_path_mixed_case_is_case_insensitive() {
-        let args = env_args_expand_path();
+        let args = env_args_expand_path_with_separator(":");
         let mut json_value = json!({ "Path": "/usr/bin:/bin" });
         args.expand_path_variable(&mut json_value);
         assert_eq!(json_value, json!({ "Path": ["/usr/bin", "/bin"] }));
