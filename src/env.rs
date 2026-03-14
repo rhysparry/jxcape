@@ -1,4 +1,5 @@
 use crate::json::JsonValueCommand;
+use crate::non_empty_separator;
 use crate::ValueReader;
 use clap::Args;
 use serde_json::{Map, Value};
@@ -18,7 +19,7 @@ pub struct EnvArgs {
     #[arg(long)]
     expand_path: bool,
     /// Separator to use when expanding the Path variable. Defaults to the platform-specific separator.
-    #[arg(long, requires = "expand_path")]
+    #[arg(long, requires = "expand_path", value_parser = non_empty_separator)]
     path_separator: Option<String>,
 }
 
@@ -102,6 +103,12 @@ mod tests {
     use super::*;
     use crate::testing::TestBuffer;
     use serde_json::json;
+
+    #[derive(clap::Parser, Debug)]
+    struct EnvArgsParser {
+        #[command(flatten)]
+        args: EnvArgs,
+    }
 
     fn env_args_from_stdin() -> EnvArgs {
         let mut args = EnvArgs::default();
@@ -355,5 +362,12 @@ mod tests {
         let mut json_value = args.value(&mut buffer).unwrap();
         args.expand_path_variable(&mut json_value);
         assert_eq!(json_value["PATH"], json!(["/usr/bin", "/bin"]));
+    }
+
+    #[test]
+    fn empty_path_separator_is_rejected() {
+        use clap::Parser;
+        let result = EnvArgsParser::try_parse_from(["cmd", "--expand-path", "--path-separator="]);
+        assert!(result.is_err());
     }
 }
