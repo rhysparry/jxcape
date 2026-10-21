@@ -47,7 +47,7 @@ jobs:
           target: ${{ matrix.target }}
 
       - name: Install git-cliff
-        uses: taiki-e/install-action@v2
+        uses: taiki-e/install-action@v2.85.5
         with:
           tool: git-cliff@2.10.0
 
@@ -96,7 +96,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install git-cliff
-        uses: taiki-e/install-action@v2
+        uses: taiki-e/install-action@v2.85.5
         with:
           tool: git-cliff@2.10.0
 
